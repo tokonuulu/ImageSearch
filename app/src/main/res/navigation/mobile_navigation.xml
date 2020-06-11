@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/imageQuery">
+
+    <fragment
+        android:id="@+id/favoriteImages"
+        android:name="com.example.imagesearch.ui.image.favorites.FavoriteImages"
+        android:label="Favorites"
+        tools:layout="@layout/favorite_images_fragment" />
+    <fragment
+        android:id="@+id/imageQuery"
+        android:name="com.example.imagesearch.ui.image.query.ImageQuery"
+        android:label="Search"
+        tools:layout="@layout/image_query_fragment" />
+</navigation>
