@@ -6,20 +6,28 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.Observer
 
 import com.example.imagesearch.R
-import com.example.imagesearch.data.ImageApiService
-import com.example.imagesearch.data.response.QueryResponse
+import com.example.imagesearch.data.db.entity.ImageDescription
+import com.example.imagesearch.data.network.ImageApiService
+import com.example.imagesearch.data.network.ImageNetworkDataSource
+import com.example.imagesearch.data.network.ImageNetworkDataSourceImpl
+import com.example.imagesearch.data.network.response.ConnectivityInterceptorImpl
+import com.example.imagesearch.ui.base.ScopedFragment
 import kotlinx.android.synthetic.main.image_query_fragment.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.kodein.di.KodeinAware
 
-class ImageQuery : Fragment() {
+import org.kodein.di.generic.instance
+import org.kodein.di.android.x.closestKodein
 
-    companion object {
-        fun newInstance() = ImageQuery()
-    }
+class ImageQuery : ScopedFragment(), KodeinAware {
+
+    override val kodein by closestKodein()
+    private val viewModelFactory: ImageQueryViewModelFactory by instance()
 
     private lateinit var viewModel: ImageQueryViewModel
 
@@ -32,15 +40,40 @@ class ImageQuery : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(ImageQueryViewModel::class.java)
-        // TODO: Use the ViewModel
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(ImageQueryViewModel::class.java)
 
-        val apiService = ImageApiService()
+
+        bindUI()
+        /*
+        val apiService = ImageApiService(ConnectivityInterceptorImpl(this.context!!))
+        val imageNetworkDataSource = ImageNetworkDataSourceImpl(apiService)
+
+        imageNetworkDataSource.downloadedQueryResponse.observe(viewLifecycleOwner, Observer {
+            var resp: String = ""
+            for (cur: ImageDescription in it.documents)
+                resp = resp + cur.displaySitename + '\n'
+
+            text_view.text = resp
+        })
 
         GlobalScope.launch(Dispatchers.Main) {
-            val response = apiService.searchImages("lake").await()
-            text_view.text = response.documents[0].displaySitename
-        }
+            imageNetworkDataSource.fetchQueryResponse("lake")
+        }*/
+
+    }
+
+    private fun bindUI() = launch{
+        val query = viewModel.queryResponse.await()
+        query.observe(viewLifecycleOwner,
+            Observer {
+                if(it == null)
+                    return@Observer
+                var resp: String = ""
+                for (cur: ImageDescription in it)
+                    resp = resp + cur.displaySitename + '\n'
+
+                text_view.text = resp
+            })
     }
 
 }

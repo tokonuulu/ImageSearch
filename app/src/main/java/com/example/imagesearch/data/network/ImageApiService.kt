@@ -1,6 +1,7 @@
-package com.example.imagesearch.data
+package com.example.imagesearch.data.network
 
-import com.example.imagesearch.data.response.QueryResponse
+import com.example.imagesearch.data.db.entity.QueryResponse
+import com.example.imagesearch.data.network.response.ConnectivityInterceptor
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import kotlinx.coroutines.Deferred
 import okhttp3.Interceptor
@@ -9,7 +10,6 @@ import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
 import retrofit2.http.GET
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
@@ -24,8 +24,11 @@ interface ImageApiService {
     ): Deferred<QueryResponse>
 
     companion object {
-        operator fun invoke() : ImageApiService {
-            val loggingInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+        operator fun invoke(
+            connectivityInterceptor: ConnectivityInterceptor
+        ): ImageApiService {
+            val loggingInterceptor =
+                HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
 
             val headerInterceptor = object : Interceptor {
                 override fun intercept(chain: Interceptor.Chain): Response {
@@ -40,6 +43,7 @@ interface ImageApiService {
             }
 
             val okHttpClient = OkHttpClient.Builder()
+                .addInterceptor(connectivityInterceptor)
                 .addInterceptor(headerInterceptor)
                 .addInterceptor(loggingInterceptor)
                 .connectTimeout(30, TimeUnit.SECONDS)

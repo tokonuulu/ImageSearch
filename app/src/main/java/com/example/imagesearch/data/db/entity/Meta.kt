@@ -1,4 +1,4 @@
-package com.example.imagesearch.data.response
+package com.example.imagesearch.data.db.entity
 
 
 import com.google.gson.annotations.SerializedName
