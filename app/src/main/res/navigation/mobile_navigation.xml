@@ -7,12 +7,12 @@
 
     <fragment
         android:id="@+id/favoriteImages"
-        android:name="com.example.imagesearch.ui.image.favorites.FavoriteImages"
+        android:name="com.example.imagesearch.ui.image.favorites.FavoriteImagesFragment"
         android:label="Favorites"
         tools:layout="@layout/favorite_images_fragment" />
     <fragment
         android:id="@+id/imageQuery"
-        android:name="com.example.imagesearch.ui.image.query.ImageQuery"
+        android:name="com.example.imagesearch.ui.image.query.ImageQueryFragment"
         android:label="Search"
         tools:layout="@layout/image_query_fragment" />
 </navigation>

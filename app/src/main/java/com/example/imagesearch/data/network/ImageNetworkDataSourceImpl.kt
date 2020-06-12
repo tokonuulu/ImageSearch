@@ -11,23 +11,22 @@ class ImageNetworkDataSourceImpl (
     private val apiService: ImageApiService
 ) : ImageNetworkDataSource {
 
-    private val _downloadedQueryResponse = MutableLiveData<List<ImageDescription>>()
-    override val downloadedQueryResponse: LiveData<List<ImageDescription>>
-        get() = _downloadedQueryResponse
-
-    override suspend fun fetchQueryResponse(query: String) {
+    override suspend fun fetchQueryResponse(query: String) : List<ImageDescription> {
+        var fetchedQueryResponse : List<ImageDescription> = emptyList()
         try {
-            val fetchedQueryResponse = apiService.searchImages(query)
-                .await()
+            fetchedQueryResponse = apiService.searchImages(query)
+                .await().documents
 
-            _downloadedQueryResponse.postValue(fetchedQueryResponse.documents.apply {
-                this.forEach {
+            fetchedQueryResponse.forEach {
+                    it.id = "${it.displaySitename}&${it.imageUrl}"
                     it.queryString = query
+                    it.isFavorite = false
                 }
-            })
-        }
+            }
         catch (e : NoConnectionException) {
             Log.e("Connectivity", "No internet connection", e)
+
         }
+        return fetchedQueryResponse
     }
 }

@@ -8,7 +8,8 @@ import com.example.imagesearch.data.db.entity.ImageDescription
 
 @Database(
     entities = [ImageDescription::class],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
 abstract class FavoritesDatabase : RoomDatabase() {
 

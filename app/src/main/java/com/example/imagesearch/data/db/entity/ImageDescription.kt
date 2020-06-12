@@ -12,8 +12,13 @@ data class ImageDescription(
     @Expose
     var queryString: String,
 
+    @Expose
+    var isFavorite: Boolean,
+
     @SerializedName("display_sitename")
     val displaySitename: String,
+
+    val datetime: String,
 
     val height: Int,
     val width: Int,
@@ -22,9 +27,8 @@ data class ImageDescription(
     val imageUrl: String,
 
     @SerializedName("thumbnail_url")
-    val thumbnailUrl: String
+    val thumbnailUrl: String,
 
-) {
-    @PrimaryKey(autoGenerate = true)
-    var id: Int = 0
-}
+    @PrimaryKey
+    var id: String
+)

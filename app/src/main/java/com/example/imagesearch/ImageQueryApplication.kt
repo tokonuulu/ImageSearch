@@ -2,6 +2,8 @@ package com.example.imagesearch
 
 import android.app.Application
 import com.example.imagesearch.data.db.FavoritesDatabase
+import com.example.imagesearch.data.db.ImageLocalDataSource
+import com.example.imagesearch.data.db.ImageLocalDataSourceImpl
 import com.example.imagesearch.data.network.ImageApiService
 import com.example.imagesearch.data.network.ImageNetworkDataSource
 import com.example.imagesearch.data.network.ImageNetworkDataSourceImpl
@@ -9,6 +11,7 @@ import com.example.imagesearch.data.network.response.ConnectivityInterceptor
 import com.example.imagesearch.data.network.response.ConnectivityInterceptorImpl
 import com.example.imagesearch.data.repository.QueryRepository
 import com.example.imagesearch.data.repository.QueryRepositoryImpl
+import com.example.imagesearch.ui.image.favorites.FavoriteImagesViewModelFactory
 import com.example.imagesearch.ui.image.query.ImageQueryViewModelFactory
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
@@ -27,8 +30,10 @@ class ImageQueryApplication : Application(), KodeinAware {
         bind<ConnectivityInterceptor>() with singleton { ConnectivityInterceptorImpl(instance()) }
         bind() from singleton { ImageApiService(instance()) }
         bind<ImageNetworkDataSource>() with singleton { ImageNetworkDataSourceImpl(instance()) }
-        bind<QueryRepository>() with singleton { QueryRepositoryImpl(instance(), instance(), instance()) }
+        bind<ImageLocalDataSource>() with singleton { ImageLocalDataSourceImpl(instance()) }
+        bind<QueryRepository>() with singleton { QueryRepositoryImpl(instance(), instance()) }
         bind() from provider { ImageQueryViewModelFactory(instance()) }
+        bind() from provider { FavoriteImagesViewModelFactory(instance()) }
     }
 
     override fun onCreate() {
