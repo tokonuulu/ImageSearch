@@ -21,6 +21,7 @@ class FavoriteImagesViewModel(
     }
 
     fun onImageClicked(imageDescription: ImageDescription) {
+        imageDescription.isFavorite = false
         queryRepository.deleteFavorite(imageDescription)
     }
 }

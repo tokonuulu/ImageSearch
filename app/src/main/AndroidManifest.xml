@@ -14,12 +14,28 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ui.MainActivity">
+
+        <provider
+            android:enabled="true"
+            android:exported="true"
+            android:authorities="com.example.imagesearch.ui.image.query.SuggestionProvider"
+            android:name=".ui.image.query.SuggestionProvider"/>
+
+        <activity android:name=".ui.MainActivity"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data android:name="android.app.searchable"
+                android:resource="@xml/searchable"/>
+
         </activity>
     </application>
 

@@ -5,7 +5,9 @@ import com.example.imagesearch.data.db.entity.ImageDescription
 
 interface QueryRepository {
 
-    suspend fun getQueryResult(query: String) : LiveData<List<ImageDescription>>
+    val queryResult: LiveData<List<ImageDescription>>
+
+    fun onNewQuery(query: String)
     suspend fun getAllFavorites() : LiveData<List<ImageDescription>>
 
     fun addFavorite(imageDescription: ImageDescription)

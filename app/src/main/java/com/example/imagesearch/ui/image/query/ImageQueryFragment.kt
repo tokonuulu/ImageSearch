@@ -1,93 +1,158 @@
 package com.example.imagesearch.ui.image.query
 
-import androidx.lifecycle.ViewModelProviders
+import android.app.SearchManager
+import android.content.Context
 import android.os.Bundle
+import android.provider.SearchRecentSuggestions
 import android.util.Log
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.widget.SearchView
+import android.widget.Toast
 import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.GridLayoutManager
 
 import com.example.imagesearch.R
 import com.example.imagesearch.data.db.entity.ImageDescription
+import com.example.imagesearch.ui.MainActivity
 import com.example.imagesearch.ui.base.ScopedFragment
-import com.example.imagesearch.ui.image.query.item.ImageQueryItem
-import com.xwray.groupie.GroupAdapter
-import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
-import kotlinx.android.synthetic.main.image_list_element_layout.view.*
 import kotlinx.android.synthetic.main.image_query_fragment.*
-import kotlinx.coroutines.launch
 import org.kodein.di.KodeinAware
 
 import org.kodein.di.generic.instance
 import org.kodein.di.android.x.closestKodein
 
-class ImageQueryFragment : ScopedFragment(), KodeinAware {
+class ImageQueryFragment : ScopedFragment(), KodeinAware, OnItemClickListener {
 
     override val kodein by closestKodein()
     private val viewModelFactory: ImageQueryViewModelFactory by instance()
 
-    private lateinit var viewModel: ImageQueryViewModel
+    private lateinit var imageViewModel: ImageQueryViewModel
+    private lateinit var searchViewModel: SearchViewModel
+
+    private lateinit var imageAdapter : ImageListAdapter
+
+    companion object {
+        const val FIRST_LAUNCH : String = "FIRST_LAUNCH"
+    }
+
+    private var isItTheFirstLaunch : Boolean = true
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
+
+        setHasOptionsMenu(true)
+        imageAdapter = ImageListAdapter(this)
+        isItFirstLaunchCheck(savedInstanceState)
+
         return inflater.inflate(R.layout.image_query_fragment, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this, viewModelFactory)
+
+        imageViewModel = ViewModelProvider((this.activity as MainActivity), viewModelFactory)
             .get(ImageQueryViewModel::class.java)
 
+        searchViewModel = ViewModelProvider((this.activity as MainActivity))
+            .get(SearchViewModel::class.java)
 
-        bindUI()
-
+        initRecyclerView()
+        startObservingSearchView()
+        startObservingQueryResult()
     }
 
-    private fun bindUI() = launch {
-        val imageQueryResult = viewModel.imageQueryResult.await()
+    private fun startObservingSearchView() {
+        with(searchViewModel) {
 
-        imageQueryResult.observe(viewLifecycleOwner, Observer { list ->
-            if (list == null) return@Observer
 
-            Log.e("QueryOBSERVER", "List changed $list")
+            if(!isItTheFirstLaunch) {
+                Log.e("Fragment relaunched", "loading new")
+                //imageViewModel.loadNewImages(queryChangeEvent.value)
+            }
+
+            queryChangeEvent.observe(viewLifecycleOwner, Observer { newQuery ->
+                Log.e("SearchObserver", "Query changed $newQuery")
+                imageViewModel.loadNewImages(newQuery)
+            })
+        }
+    }
+
+    private fun startObservingQueryResult() {
+        imageViewModel.imageList.observe(viewLifecycleOwner, Observer<List<ImageDescription>> {
+            val newList = mutableListOf<ImageDescription>()
+            it.forEach { item -> newList.add(item.copy()) }
             group_loading.visibility = View.GONE
-            initRecyclerView(list.toImageQueryItems())
+            imageAdapter.updateList(newList)
         })
     }
 
-    private fun List<ImageDescription>.toImageQueryItems(): List<ImageQueryItem> {
-        return this.map {
-            ImageQueryItem(it)
+    private fun initRecyclerView() {
+        recyclerView.apply {
+            layoutManager = GridLayoutManager(this@ImageQueryFragment.context, 2)
+            adapter = imageAdapter
+            setHasFixedSize(true)
+            setItemViewCacheSize(20)
         }
     }
 
-    private fun initRecyclerView(items: List<ImageQueryItem>) {
-        val groupAdapter = GroupAdapter<GroupieViewHolder>().apply {
-            addAll(items)
+    override fun onItemClicked(imageDescription: ImageDescription) {
+        imageViewModel.onImageClicked(imageDescription)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        menu.clear()
+
+        inflater.inflate(R.menu.search_menu, menu)
+
+        val searchView =
+            SearchView((context as MainActivity).supportActionBar?.themedContext ?: context)
+        menu.findItem(R.id.action_search).apply {
+            setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW or MenuItem.SHOW_AS_ACTION_IF_ROOM)
+            actionView = searchView
         }
 
-        recyclerView.apply {
-            layoutManager = LinearLayoutManager(this@ImageQueryFragment.context)
-            adapter = groupAdapter
-        }
+        searchView.isIconifiedByDefault = false
+        searchView.isQueryRefinementEnabled = true
 
-        groupAdapter.setOnItemClickListener { item, view ->
-            (item as? ImageQueryItem)?.let {
-                if (view.favoriteIcon.tag == 1) {
-                    view.favoriteIcon.tag = 2
-                    view.favoriteIcon.setImageResource(R.drawable.ic_favorite_pink_32)
-                } else {
-                    view.favoriteIcon.tag = 1
-                    view.favoriteIcon.setImageResource(R.drawable.ic_favorite_border_32)
-                }
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
 
-                viewModel.onImageClicked(it.imageDescription)
+                // Saving queries
+                SearchRecentSuggestions(
+                    this@ImageQueryFragment.context,
+                    SuggestionProvider.AUTHORITY,
+                    SuggestionProvider.MODE
+                )
+                    .saveRecentQuery(query, null)
+
+                // Notify the ViewModel
+                group_loading.visibility = View.VISIBLE
+                searchViewModel.onSearchButtonClicked(query)
+
+                Toast.makeText(this@ImageQueryFragment.context, "Seach: $query", Toast.LENGTH_SHORT)
+                    .show()
+                return false
             }
-        }
+
+            override fun onQueryTextChange(newText: String): Boolean {
+                return false
+            }
+        })
+
+    }
+
+    private fun isItFirstLaunchCheck(savedInstanceState: Bundle?) {
+        isItTheFirstLaunch = savedInstanceState?.getBoolean(FIRST_LAUNCH) ?: true
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState?.putBoolean(FIRST_LAUNCH, false)
     }
 }
