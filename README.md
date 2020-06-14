@@ -1,6 +1,6 @@
 # Android MVVM Architechture: sample
 
-It loads images from the Internet and stores them (favorites) in the local database.
+It loads images from the Internet and stores them (favorites) in a local database.
 
 ## Reference Libraries
 
