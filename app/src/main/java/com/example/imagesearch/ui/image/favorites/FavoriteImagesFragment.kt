@@ -46,9 +46,7 @@ class FavoriteImagesFragment : ScopedFragment(), KodeinAware, OnItemClickListene
         }
 
         launch {
-            val allFavorites = viewModel.allFavorites.await()
-
-            allFavorites.observe(viewLifecycleOwner, Observer { list ->
+            viewModel.allFavorites.observe(viewLifecycleOwner, Observer { list ->
                 if (list == null) return@Observer
                 group_loading.visibility = View.GONE
                 imageAdapter.updateList(list)

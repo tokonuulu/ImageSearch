@@ -9,7 +9,6 @@ import com.example.imagesearch.R
 import com.example.imagesearch.data.db.entity.ImageDescription
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.image_list_element_layout.view.*
-import kotlinx.coroutines.runBlocking
 import kotlin.properties.Delegates
 
 class ImageListAdapter(private val itemClickListener: OnItemClickListener) :

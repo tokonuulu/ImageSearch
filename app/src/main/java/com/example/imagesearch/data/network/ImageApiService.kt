@@ -26,7 +26,7 @@ interface ImageApiService {
     companion object {
         operator fun invoke(
             connectivityInterceptor: ConnectivityInterceptor
-        ): ImageApiService {
+        ) : ImageApiService {
             val loggingInterceptor =
                 HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
 

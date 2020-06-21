@@ -1,26 +1,21 @@
 package com.example.imagesearch.ui.image.query
 
-import android.app.SearchManager
-import android.content.Context
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
-import android.util.Log
 import android.view.*
 import android.widget.SearchView
-import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
-
 import com.example.imagesearch.R
 import com.example.imagesearch.data.db.entity.ImageDescription
 import com.example.imagesearch.ui.MainActivity
 import com.example.imagesearch.ui.base.ScopedFragment
 import kotlinx.android.synthetic.main.image_query_fragment.*
 import org.kodein.di.KodeinAware
-
-import org.kodein.di.generic.instance
 import org.kodein.di.android.x.closestKodein
+import org.kodein.di.generic.instance
+
 
 class ImageQueryFragment : ScopedFragment(), KodeinAware, OnItemClickListener {
 
@@ -30,13 +25,13 @@ class ImageQueryFragment : ScopedFragment(), KodeinAware, OnItemClickListener {
     private lateinit var imageViewModel: ImageQueryViewModel
     private lateinit var searchViewModel: SearchViewModel
 
-    private lateinit var imageAdapter : ImageListAdapter
+    private lateinit var imageAdapter: ImageListAdapter
 
     companion object {
-        const val FIRST_LAUNCH : String = "FIRST_LAUNCH"
+        const val FIRST_LAUNCH: String = "FIRST_LAUNCH"
     }
 
-    private var isItTheFirstLaunch : Boolean = true
+    private var isItTheFirstLaunch: Boolean = true
 
 
     override fun onCreateView(
@@ -47,6 +42,7 @@ class ImageQueryFragment : ScopedFragment(), KodeinAware, OnItemClickListener {
 
         setHasOptionsMenu(true)
         imageAdapter = ImageListAdapter(this)
+
         isItFirstLaunchCheck(savedInstanceState)
 
         return inflater.inflate(R.layout.image_query_fragment, container, false)
@@ -68,15 +64,7 @@ class ImageQueryFragment : ScopedFragment(), KodeinAware, OnItemClickListener {
 
     private fun startObservingSearchView() {
         with(searchViewModel) {
-
-
-            if(!isItTheFirstLaunch) {
-                Log.e("Fragment relaunched", "loading new")
-                //imageViewModel.loadNewImages(queryChangeEvent.value)
-            }
-
             queryChangeEvent.observe(viewLifecycleOwner, Observer { newQuery ->
-                Log.e("SearchObserver", "Query changed $newQuery")
                 imageViewModel.loadNewImages(newQuery)
             })
         }
@@ -135,8 +123,6 @@ class ImageQueryFragment : ScopedFragment(), KodeinAware, OnItemClickListener {
                 group_loading.visibility = View.VISIBLE
                 searchViewModel.onSearchButtonClicked(query)
 
-                Toast.makeText(this@ImageQueryFragment.context, "Seach: $query", Toast.LENGTH_SHORT)
-                    .show()
                 return false
             }
 
@@ -153,6 +139,6 @@ class ImageQueryFragment : ScopedFragment(), KodeinAware, OnItemClickListener {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState?.putBoolean(FIRST_LAUNCH, false)
+        outState.putBoolean(FIRST_LAUNCH, false)
     }
 }

@@ -1,10 +1,7 @@
 package com.example.imagesearch.data.network
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.example.imagesearch.data.db.entity.ImageDescription
-import com.example.imagesearch.data.db.entity.QueryResponse
 import com.example.imagesearch.internals.NoConnectionException
 
 class ImageNetworkDataSourceImpl (

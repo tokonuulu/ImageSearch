@@ -5,10 +5,11 @@ import com.example.imagesearch.data.db.entity.ImageDescription
 
 interface ImageLocalDataSource {
 
-    fun addFavorite(imageDescription: ImageDescription)
+    val allFavorites : LiveData<List<ImageDescription>>
 
-    fun deleteFavorite(imageDescription: ImageDescription)
+    suspend fun addFavorite(imageDescription: ImageDescription)
+
+    suspend fun deleteFavorite(imageDescription: ImageDescription)
 
     suspend fun fetchNonLiveFavorites() : List<ImageDescription>
-    suspend fun fetchAllFavorites() : LiveData<List<ImageDescription>>
 }
