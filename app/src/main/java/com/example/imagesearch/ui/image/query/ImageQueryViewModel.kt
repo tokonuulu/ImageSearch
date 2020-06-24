@@ -3,8 +3,10 @@ package com.example.imagesearch.ui.image.query
 import androidx.lifecycle.*
 import com.example.imagesearch.data.db.entity.ImageDescription
 import com.example.imagesearch.data.repository.QueryRepository
+import com.example.imagesearch.internals.NoConnectionException
+import com.example.imagesearch.internals.QueryState
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class ImageQueryViewModel(
@@ -14,18 +16,38 @@ class ImageQueryViewModel(
     private val _imageList = MutableLiveData<List<ImageDescription>>()
     val imageList : LiveData<List<ImageDescription>> = _imageList
 
+    private val _queryState = MutableLiveData<QueryState>()
+    val queryState: LiveData<QueryState> = _queryState
+
     init {
         queryRepository.apply {
-            queryResult.observeForever(Observer {
+            queryResult.observeForever {
                 _imageList.postValue(it)
-            })
+            }
         }
+
+        _queryState.postValue(QueryState.IDLE)
     }
 
     fun loadNewImages (query: String?) {
         if (query == null) return
-        viewModelScope.launch(Dispatchers.IO) {
+
+        val handler = CoroutineExceptionHandler {_, exception->
+            if (exception is NoConnectionException) {
+                changeState(QueryState.NETWORK_ERROR)
+            }
+            else {
+                changeState(QueryState.UNKNOWN_ERROR)
+            }
+        }
+
+        val queryJob = viewModelScope.launch(handler) {
+            changeState(QueryState.RUNNING)
             queryRepository.onNewQuery(query)
+        }
+        queryJob.invokeOnCompletion { throwable->
+            if (throwable == null)
+                changeState(QueryState.SUCCESS)
         }
     }
 
@@ -43,4 +65,11 @@ class ImageQueryViewModel(
         }
     }
 
+    private fun changeState(newState: QueryState) {
+        _queryState.postValue(newState)
+    }
+
+    fun onErrorHandled () {
+        changeState(QueryState.IDLE)
+    }
 }
